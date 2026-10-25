@@ -1,0 +1,57 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <style>
+      html, body { margin: 0; padding: 0; width: 512px; height: 512px; background: transparent; }
+      svg { display: block; width: 512px; height: 512px; }
+    </style>
+  </head>
+  <body>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="512" height="512">
+      <defs>
+        <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0" stop-color="#191126" />
+          <stop offset="0.52" stop-color="#0c0f15" />
+          <stop offset="1" stop-color="#0a1510" />
+        </linearGradient>
+        <linearGradient id="tw" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0" stop-color="#b58cff" />
+          <stop offset="0.5" stop-color="#9147ff" />
+          <stop offset="1" stop-color="#6f2ad6" />
+        </linearGradient>
+        <linearGradient id="kk" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0" stop-color="#9dff78" />
+          <stop offset="0.5" stop-color="#53fc18" />
+          <stop offset="1" stop-color="#2fd106" />
+        </linearGradient>
+        <filter id="shadow" x="-30%" y="-30%" width="160%" height="180%">
+          <feDropShadow dx="0" dy="2.5" stdDeviation="3" flood-color="#000000" flood-opacity="0.45" />
+        </filter>
+        <filter id="soft" x="-30%" y="-30%" width="160%" height="180%">
+          <feDropShadow dx="0" dy="1.5" stdDeviation="2" flood-color="#000000" flood-opacity="0.5" />
+        </filter>
+      </defs>
+
+      <rect x="1.5" y="1.5" width="125" height="125" rx="28" fill="url(#bg)" stroke="#ffffff" stroke-opacity="0.10" stroke-width="1.5" />
+
+      <!-- Twitch bubble (back) -->
+      <g filter="url(#shadow)">
+        <rect x="13" y="19" width="67" height="48" rx="14" fill="url(#tw)" />
+        <path d="M29 64 h14 l-14 14 z" fill="#7f3ae8" />
+        <g transform="translate(31.5 28) scale(1.2)" fill="#ffffff">
+          <path d="M11.571 4.714h1.715v5.143H11.57zm4.715 0H18v5.143h-1.714zM6 0L1.714 4.286v15.428h5.143V24l4.286-4.286h3.428L22.286 12V0zm14.571 11.143l-3.428 3.428h-3.429l-3 3v-3H6.857V1.714h13.714Z" />
+        </g>
+      </g>
+
+      <!-- Kick bubble (front) -->
+      <g filter="url(#soft)">
+        <rect x="48" y="54" width="66" height="46" rx="14" fill="url(#kk)" stroke="#0b0e13" stroke-width="3.5" />
+        <path d="M82 97 h15 l1 15 z" fill="#53fc18" stroke="#0b0e13" stroke-width="3.5" stroke-linejoin="round" />
+        <g transform="translate(67.5 62) scale(1.05)" fill="#061006">
+          <path d="M1.333 0h8v5.333H12V2.667h2.667V0h8v8H20v2.667h-2.667v2.666H20V16h2.667v8h-8v-2.667H12v-2.666H9.333V24h-8Z" />
+        </g>
+      </g>
+    </svg>
+  </body>
+</html>
