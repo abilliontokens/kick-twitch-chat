@@ -48,6 +48,34 @@ async function pruneSevenTVCache() {
   await chrome.storage.local.remove(cached.slice(0, cached.length - 30).map(([key]) => key));
 }
 
+async function kickChannelInfo(slug) {
+  const res = await fetch(`https://kick.com/api/v2/channels/${encodeURIComponent(slug)}`, {
+    headers: { Accept: "application/json" },
+    cache: "no-store",
+  });
+  if (!res.ok) throw new Error(`Kick channel HTTP ${res.status}`);
+  const json = await res.json();
+  const channel = json && json.data && json.data.id ? json.data : json;
+  const chatroom = (channel && channel.chatroom) || (json && json.chatroom) || null;
+  const userId = channel ? channel.user_id || (channel.user && channel.user.id) : null;
+  return {
+    chatId: chatroom ? Number(chatroom.id || chatroom.chat_id) : null,
+    userId: userId ? String(userId) : null,
+    slug: (channel && channel.slug) || slug,
+  };
+}
+
+async function kickHistory(chatId) {
+  const res = await fetch(`https://web.kick.com/api/v1/chat/${Number(chatId)}/history`, {
+    headers: { Accept: "application/json" },
+    cache: "no-store",
+  });
+  if (!res.ok) throw new Error(`Kick history HTTP ${res.status}`);
+  const json = await res.json();
+  const list = (json && json.data && json.data.messages) || (json && json.messages) || [];
+  return Array.isArray(list) ? list : [];
+}
+
 async function loadSevenTV({ kickUserId, twitchUserId }) {
   const jobs = [sevenTVPart("global", SEVEN_TV_GLOBAL).catch(() => [])];
   const keys = [];
@@ -113,6 +141,18 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
       .catch((error) => sendResponse({ ok: false, error: String(error && error.message) }));
     return true;
   }
+  if (message.type === "ktw:kick-info") {
+    kickChannelInfo(message.slug)
+      .then((info) => sendResponse({ ok: true, info }))
+      .catch((error) => sendResponse({ ok: false, error: String(error && error.message) }));
+    return true;
+  }
+  if (message.type === "ktw:kick-history") {
+    kickHistory(message.chatId)
+      .then((messages) => sendResponse({ ok: true, messages }))
+      .catch((error) => sendResponse({ ok: false, error: String(error && error.message) }));
+    return true;
+  }
   if (message.type === "ktw:7tv") {
     loadSevenTV({
       kickUserId: message.kickUserId || null,
@@ -124,3 +164,4 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
   }
   return undefined;
 });
+

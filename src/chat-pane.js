@@ -75,12 +75,25 @@
       menu.className = "ktw-menu";
       menu.hidden = true;
       menu.innerHTML = `
-        <label><input type="checkbox" data-setting="showTimestamps"> Timestamps</label>
-        <label><input type="checkbox" data-setting="showBadges"> Badges</label>
-        <label><input type="checkbox" data-setting="tintTwitch"> Twitch tint</label>
-        <label><input type="checkbox" data-setting="tintKick"> Kick tint</label>
-        <label><input type="checkbox" data-setting="colorBar"> Color bar</label>
-        <label><input type="checkbox" data-setting="kickIcon"> Kick icon</label>`;
+        <div class="ktw-menu-head">
+          <span>Chat Display</span>
+          <button type="button" class="ktw-menu-close" aria-label="Close settings">&times;</button>
+        </div>
+        <div class="ktw-menu-group">
+          <label><span>Timestamps</span><input type="checkbox" data-setting="showTimestamps"></label>
+          <label><span>Badges</span><input type="checkbox" data-setting="showBadges"></label>
+          <label><span>Kick Badges</span><input type="checkbox" data-setting="kickBadges"></label>
+        </div>
+        <div class="ktw-menu-group">
+          <label><span>Twitch Tint</span><input type="checkbox" data-setting="tintTwitch"></label>
+          <label><span>Kick Tint</span><input type="checkbox" data-setting="tintKick"></label>
+          <label><span>Color Bar</span><input type="checkbox" data-setting="colorBar"></label>
+          <label><span>Kick Icon</span><input type="checkbox" data-setting="kickIcon"></label>
+        </div>`;
+      menu.querySelector(".ktw-menu-close").addEventListener("click", (event) => {
+        event.stopPropagation();
+        menu.hidden = true;
+      });
       this.menu = menu;
       this.settingsButton = settings;
       settings.addEventListener("click", (event) => {
@@ -217,6 +230,7 @@
       sync("tintKick", tintKick);
       sync("colorBar", colorBar);
       sync("kickIcon", kickIcon);
+      sync("kickBadges", kickBadges);
     }
 
     setBadgeMap(map) {

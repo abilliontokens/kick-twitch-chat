@@ -16,51 +16,70 @@
       </div>
     </header>
 
-    <label class="switch">
-      <input id="enabled" type="checkbox" />
-      <span class="track"><span class="thumb"></span></span>
-      <span class="switch-label">Enabled on Kick</span>
-    </label>
-
-    <section class="card">
-      <div class="row">
-        <span class="dot" id="kick-dot"></span>
-        <span class="who">Kick</span>
-        <span class="value" id="kick-name">—</span>
+    <section class="card hero">
+      <div class="hero-copy">
+        <span class="hero-title">Enabled on Kick &amp; Twitch</span>
       </div>
-      <div class="row">
-        <span class="dot twitch" id="twitch-dot"></span>
-        <span class="who">Twitch</span>
-        <span class="value" id="twitch-name">—</span>
-      </div>
-      <p class="hint" id="page-hint">Open a Kick channel to see chat.</p>
+      <label class="switch">
+        <input id="enabled" type="checkbox" />
+        <span class="track"><span class="thumb"></span></span>
+      </label>
     </section>
 
-    <form id="mapping">
-      <label class="field">
-        <span>Twitch channel for this Kick channel</span>
-        <input id="twitch-input" type="text" autocomplete="off" spellcheck="false" placeholder="e.g. xqc" />
-      </label>
-      <div class="actions">
-        <button type="submit" class="primary">Save</button>
-        <button type="button" id="reset" class="ghost">Use same name</button>
+    <section class="card panel">
+      <div class="panel-head">
+        <span>Status</span>
+        <button type="button" id="refresh" class="mini-btn">Reconnect</button>
       </div>
-      <p class="hint">Defaults to the Kick channel name. Set it only when the Twitch name differs.</p>
+      <div class="panel-body status">
+        <div class="row">
+          <span class="dot" id="kick-dot"></span>
+          <span class="who">Kick</span>
+          <span class="value" id="kick-name">—</span>
+        </div>
+        <div class="row">
+          <span class="dot twitch" id="twitch-dot"></span>
+          <span class="who">Twitch</span>
+          <span class="value" id="twitch-name">—</span>
+        </div>
+        <p class="hint" id="page-hint">Open a Kick or Twitch channel to see chat.</p>
+      </div>
+    </section>
+
+    <form id="mapping" class="card panel">
+      <div class="panel-head">Channel Mapping</div>
+      <div class="panel-body">
+        <label class="field">
+          <span id="mapping-label">Twitch channel for this Kick channel</span>
+          <div class="mapping-row">
+            <input id="twitch-input" type="text" autocomplete="off" spellcheck="false" placeholder="e.g. xqc" />
+            <button type="submit" class="primary">Save</button>
+          </div>
+        </label>
+        <div class="mapping-meta">
+          <button type="button" id="reset" class="link-btn">Use same name</button>
+          <span class="hint" id="mapping-hint">Defaults to the same name.</span>
+        </div>
+      </div>
     </form>
 
-    <section class="card slim grid">
-      <label class="check"><input id="timestamps" type="checkbox" /> Timestamps</label>
-      <label class="check"><input id="badges" type="checkbox" /> Badges</label>
-      <label class="check"><input id="kick-badges" type="checkbox" /> Kick badges</label>
-      <label class="check"><input id="tint-twitch" type="checkbox" /> Twitch tint</label>
-      <label class="check"><input id="tint-kick" type="checkbox" /> Kick tint</label>
-      <label class="check"><input id="color-bar" type="checkbox" /> Color bar</label>
-      <label class="check"><input id="kick-icon" type="checkbox" /> Kick icon</label>
+    <section class="card panel">
+      <div class="panel-head">Chat Display</div>
+      <div class="panel-group grid2">
+        <label class="row-switch"><span>Timestamps</span><input id="timestamps" type="checkbox" /></label>
+        <label class="row-switch"><span>Badges</span><input id="badges" type="checkbox" /></label>
+        <label class="row-switch"><span>Kick Badges</span><input id="kick-badges" type="checkbox" /></label>
+      </div>
+      <div class="panel-group grid2">
+        <label class="row-switch"><span>Twitch Tint</span><input id="tint-twitch" type="checkbox" /></label>
+        <label class="row-switch"><span>Kick Tint</span><input id="tint-kick" type="checkbox" /></label>
+        <label class="row-switch"><span>Color Bar</span><input id="color-bar" type="checkbox" /></label>
+        <label class="row-switch"><span>Kick Icon</span><input id="kick-icon" type="checkbox" /></label>
+      </div>
     </section>
 
     <footer>
-      <button type="button" id="refresh" class="ghost wide">Reconnect</button>
-      <p class="hint">Read-only: Twitch chat is fetched anonymously. Send messages in Kick's own input.</p>
+      <p class="hint">Read-only. Send messages in the site's own input.</p>
       <p class="repo-line"><a href="https://github.com/abilliontokens/kick-twitch-chat" target="_blank" rel="noreferrer">Source on GitHub</a></p>
     </footer>
 

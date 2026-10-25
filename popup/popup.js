@@ -1,6 +1,7 @@
 const DEFAULTS = {
   enabled: true,
   twitchChannel: {},
+  kickByTwitch: {},
   showTimestamps: true,
   showBadges: true,
   tintTwitch: true,
@@ -13,6 +14,7 @@ const DEFAULTS = {
 const $ = (id) => document.getElementById(id);
 
 let currentSlug = null;
+let currentHost = "kick";
 
 function cleanSlug(value) {
   const slug = String(value || "").trim().toLowerCase();
@@ -34,6 +36,10 @@ async function readSettings() {
     twitchChannel:
       stored.twitchChannel && typeof stored.twitchChannel === "object"
         ? stored.twitchChannel
+        : {},
+    kickByTwitch:
+      stored.kickByTwitch && typeof stored.kickByTwitch === "object"
+        ? stored.kickByTwitch
         : {},
     showTimestamps: stored.showTimestamps !== false,
     showBadges: stored.showBadges !== false,
@@ -61,12 +67,13 @@ async function status() {
   }
 }
 
-async function saveMapping(slug, value) {
+async function saveMapping(host, channel, value) {
   const settings = await readSettings();
-  const map = { ...settings.twitchChannel };
-  if (!value || value === slug) delete map[slug];
-  else map[slug] = value;
-  await chrome.storage.sync.set({ twitchChannel: map });
+  const key = host === "twitch" ? "kickByTwitch" : "twitchChannel";
+  const map = { ...settings[key] };
+  if (!value || value === channel) delete map[channel];
+  else map[channel] = value;
+  await chrome.storage.sync.set({ [key]: map });
 }
 
 async function refresh() {
@@ -98,25 +105,37 @@ async function render() {
     $("twitch-name").textContent = "—";
     paintDot($("kick-dot"), "idle");
     paintDot($("twitch-dot"), "idle");
+    hint.hidden = false;
     hint.textContent = "Open a Kick channel or popout chat to use this extension.";
     return;
   }
 
-  currentSlug = info.slug || null;
-  if (info.slug) {
-    $("kick-name").textContent = `#${info.slug}`;
+  const isTwitch = info.host === "twitch";
+  currentSlug = info.channel || info.slug || null;
+  currentHost = isTwitch ? "twitch" : "kick";
+  if (currentSlug) {
+    $("kick-name").textContent = info.kickSlug ? `#${info.kickSlug}` : "not linked";
     $("twitch-name").textContent = info.twitchSlug ? `#${info.twitchSlug}` : "not linked";
     paintDot($("kick-dot"), info.kick);
     paintDot($("twitch-dot"), info.twitch);
-    $("twitch-input").value = (settings.twitchChannel || {})[info.slug] || "";
+    $("mapping-label").textContent = isTwitch
+      ? "Kick channel for this Twitch channel"
+      : "Twitch channel for this Kick channel";
+    $("mapping-hint").textContent = isTwitch
+      ? "Defaults to the Twitch channel name."
+      : "Defaults to the Kick channel name.";
+    const map = isTwitch ? settings.kickByTwitch : settings.twitchChannel;
+    $("twitch-input").value = (map || {})[currentSlug] || "";
+    hint.hidden = Boolean(info.mounted);
     hint.textContent = info.mounted
-      ? "Merged chat is mounted in this tab."
-      : "Chat is enabled; waiting for the Kick chat column to appear.";
+      ? ""
+      : "Chat is enabled; waiting for the chat column to appear.";
   } else {
     $("kick-name").textContent = "—";
     $("twitch-name").textContent = "—";
     paintDot($("kick-dot"), "idle");
     paintDot($("twitch-dot"), "idle");
+    hint.hidden = false;
     hint.textContent = "This Kick page has no channel chat.";
   }
 }
@@ -159,7 +178,7 @@ $("mapping").addEventListener("submit", async (event) => {
   event.preventDefault();
   if (!currentSlug) return;
   const value = cleanSlug($("twitch-input").value);
-  await saveMapping(currentSlug, value);
+  await saveMapping(currentHost, currentSlug, value);
   $("twitch-input").value = value === currentSlug ? "" : value;
   await refresh();
   setTimeout(render, 200);
@@ -168,7 +187,7 @@ $("mapping").addEventListener("submit", async (event) => {
 $("reset").addEventListener("click", async () => {
   if (!currentSlug) return;
   $("twitch-input").value = "";
-  await saveMapping(currentSlug, "");
+  await saveMapping(currentHost, currentSlug, "");
   await refresh();
   setTimeout(render, 200);
 });

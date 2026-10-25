@@ -1,0 +1,1 @@
+{"data":{"connections":[{"credentials":{"url":"wss://realtime.us-west-2.platform.kick.com/connection/websocket"},"provider":"centrifugo"}],"mode":"websocket"},"message":"success"}

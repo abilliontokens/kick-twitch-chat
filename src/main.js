@@ -377,8 +377,11 @@
       if (message.type === "ktw:status") {
         sendResponse({
           ok: true,
+          host: "kick",
           enabled: settings.enabled,
           slug: active ? active.slug : null,
+          channel: active ? active.slug : null,
+          kickSlug: active ? active.slug : null,
           twitchSlug: active ? active.twitchSlug : null,
           chatId: active ? active.chatId : null,
           mounted: Boolean(pane && pane.mounted),

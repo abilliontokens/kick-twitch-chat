@@ -1,8 +1,9 @@
 :root {
   color-scheme: dark;
   --bg: #0b0e13;
-  --card: #131820;
-  --line: rgba(255, 255, 255, 0.09);
+  --panel: #151a22;
+  --panel-2: #10141b;
+  --line: rgba(255, 255, 255, 0.1);
   --fg: #f1f2f4;
   --muted: #9aa3ad;
   --twitch: #9147ff;
@@ -15,9 +16,11 @@
 
 body {
   margin: 0;
-  width: 320px;
-  padding: 14px;
-  background: var(--bg);
+  width: 336px;
+  padding: 12px;
+  background:
+    radial-gradient(120% 60% at 100% 0%, rgba(145, 71, 255, 0.12), transparent 60%),
+    var(--bg);
   color: var(--fg);
   font: 13px/1.45 Inter, system-ui, -apple-system, "Segoe UI", sans-serif;
 }
@@ -32,11 +35,12 @@ body {
 .logo {
   display: grid;
   place-items: center;
-  width: 32px;
-  height: 32px;
-  border-radius: 8px;
+  width: 34px;
+  height: 34px;
+  border-radius: 9px;
   background: linear-gradient(145deg, var(--twitch), #5a2bb0);
   color: #fff;
+  box-shadow: 0 6px 18px rgba(145, 71, 255, 0.3);
 }
 
 h1 {
@@ -52,16 +56,86 @@ h1 {
   font-size: 11px;
 }
 
-.switch {
+/* Cards */
+.card {
+  margin-bottom: 8px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: linear-gradient(180deg, var(--panel) 0%, var(--panel-2) 100%);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
+}
+
+.card.panel {
+  padding: 0;
+  overflow: hidden;
+}
+
+.panel-head {
   display: flex;
   align-items: center;
-  gap: 9px;
-  padding: 8px 10px;
-  border: 1px solid var(--line);
-  border-radius: 9px;
-  background: var(--card);
+  justify-content: space-between;
+  gap: 8px;
+  padding: 7px 10px 6px;
+  border-bottom: 1px solid var(--line);
+  color: rgba(255, 255, 255, 0.52);
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.panel-body {
+  padding: 8px 10px 9px;
+}
+
+.panel-group {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  padding: 6px;
+}
+
+.panel-group + .panel-group {
+  border-top: 1px solid var(--line);
+}
+
+.panel-group.grid2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1px 8px;
+}
+
+/* Enabled hero row */
+.hero {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 8px 12px;
+}
+
+.hero-copy {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.hero-title {
+  font-size: 12.5px;
+  font-weight: 700;
+}
+
+.hero-sub {
+  color: var(--muted);
+  font-size: 11px;
+}
+
+/* iOS-style switch (hero) */
+.switch {
+  position: relative;
+  display: inline-flex;
+  flex: 0 0 auto;
   cursor: pointer;
-  margin-bottom: 10px;
 }
 
 .switch input {
@@ -72,23 +146,22 @@ h1 {
 
 .track {
   position: relative;
-  width: 34px;
-  height: 19px;
+  width: 36px;
+  height: 20px;
   border-radius: 999px;
   background: rgba(255, 255, 255, 0.16);
-  transition: background 120ms ease;
-  flex: 0 0 auto;
+  transition: background 140ms ease;
 }
 
 .thumb {
   position: absolute;
   top: 2px;
   left: 2px;
-  width: 15px;
-  height: 15px;
+  width: 16px;
+  height: 16px;
   border-radius: 50%;
   background: #fff;
-  transition: transform 120ms ease;
+  transition: transform 140ms ease;
 }
 
 .switch input:checked + .track {
@@ -96,7 +169,7 @@ h1 {
 }
 
 .switch input:checked + .track .thumb {
-  transform: translateX(15px);
+  transform: translateX(16px);
   background: #07210a;
 }
 
@@ -105,41 +178,18 @@ h1 {
   outline-offset: 2px;
 }
 
-.switch-label {
-  font-weight: 600;
-}
-
-.card {
-  border: 1px solid var(--line);
-  border-radius: 9px;
-  background: var(--card);
-  padding: 9px 10px;
-  margin-bottom: 10px;
-}
-
-.card.slim {
-  display: flex;
-  gap: 16px;
-  padding: 8px 10px;
-}
-
-.card.grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 8px 12px;
-}
-
-.row {
+/* Status */
+.status .row {
   display: flex;
   align-items: center;
   gap: 7px;
-  min-height: 20px;
+  min-height: 21px;
 }
 
 .who {
-  font-weight: 600;
+  width: 48px;
   color: var(--muted);
-  width: 46px;
+  font-weight: 600;
 }
 
 .value {
@@ -176,15 +226,12 @@ h1 {
 }
 
 .hint {
-  margin: 6px 0 0;
+  margin: 4px 0 0;
   color: var(--muted);
-  font-size: 11px;
+  font-size: 10.5px;
 }
 
-form {
-  margin-bottom: 10px;
-}
-
+/* Mapping */
 .field {
   display: block;
   margin-bottom: 8px;
@@ -213,9 +260,64 @@ input[type="text"]:focus {
   border-color: rgba(145, 71, 255, 0.7);
 }
 
-.actions {
+.mapping-row {
   display: flex;
+  gap: 6px;
+  align-items: center;
+}
+
+.mapping-row input {
+  flex: 1 1 auto;
+}
+
+.mapping-row button {
+  flex: 0 0 auto;
+  padding: 7px 12px;
+}
+
+.mapping-meta {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
   gap: 8px;
+  margin-top: 4px;
+}
+
+.mapping-meta .hint {
+  margin: 0;
+  text-align: right;
+}
+
+.link-btn {
+  border: none;
+  background: transparent;
+  color: #c9aefb;
+  font-size: 10.5px;
+  font-weight: 600;
+  padding: 0;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.link-btn:hover {
+  color: #e6dbff;
+  text-decoration: underline;
+}
+
+.mini-btn {
+  border: 1px solid var(--line);
+  background: rgba(255, 255, 255, 0.04);
+  color: rgba(255, 255, 255, 0.75);
+  font-size: 10.5px;
+  font-weight: 700;
+  padding: 2px 7px;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+.mini-btn:hover {
+  background: rgba(255, 255, 255, 0.09);
+  color: #fff;
 }
 
 button {
@@ -250,25 +352,66 @@ button.wide {
   width: 100%;
 }
 
-.check {
+/* Display switches (matches the in-chat menu) */
+.row-switch {
   display: flex;
   align-items: center;
-  gap: 7px;
-  color: var(--fg);
+  justify-content: space-between;
+  gap: 8px;
+  padding: 4px 6px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
   cursor: pointer;
 }
 
-.check input {
-  accent-color: var(--twitch);
+.row-switch:hover {
+  background: rgba(255, 255, 255, 0.06);
 }
 
+.row-switch input[type="checkbox"] {
+  appearance: none;
+  -webkit-appearance: none;
+  position: relative;
+  flex: 0 0 auto;
+  width: 28px;
+  height: 16px;
+  margin: 0;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.16);
+  cursor: pointer;
+  transition: background 140ms ease;
+}
+
+.row-switch input[type="checkbox"]::after {
+  content: "";
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: #fff;
+  transition: transform 140ms ease;
+}
+
+.row-switch input[type="checkbox"]:checked {
+  background: var(--twitch);
+}
+
+.row-switch input[type="checkbox"]:checked::after {
+  transform: translateX(12px);
+}
+
+.row-switch input[type="checkbox"]:focus-visible {
+  outline: 2px solid var(--twitch);
+  outline-offset: 2px;
+}
+
+/* Footer */
 footer {
   margin-top: 2px;
-}
-
-.actions + .hint,
-.field + .hint {
-  margin-top: 7px;
 }
 
 .repo-line {
