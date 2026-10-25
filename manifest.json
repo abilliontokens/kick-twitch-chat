@@ -1,0 +1,42 @@
+{
+  "manifest_version": 3,
+  "name": "Kick + Twitch Chat",
+  "version": "1.0.0",
+  "description": "Merge Twitch chat into Kick chat. Twitch messages carry a Twitch icon and badges, in one live scrolling stream.",
+  "permissions": ["storage"],
+  "host_permissions": ["https://gql.twitch.tv/*", "https://7tv.io/*"],
+  "background": {
+    "service_worker": "src/background.js"
+  },
+  "content_scripts": [
+    {
+      "matches": ["https://kick.com/*", "https://www.kick.com/*"],
+      "js": [
+        "src/kick-realtime.js",
+        "src/twitch-irc.js",
+        "src/seventv.js",
+        "src/render.js",
+        "src/chat-pane.js",
+        "src/main.js"
+      ],
+      "css": ["src/chat-pane.css"],
+      "run_at": "document_idle"
+    }
+  ],
+  "action": {
+    "default_title": "Kick + Twitch Chat",
+    "default_popup": "popup/popup.html",
+    "default_icon": {
+      "16": "icons/icon16.png",
+      "32": "icons/icon32.png",
+      "48": "icons/icon48.png",
+      "128": "icons/icon128.png"
+    }
+  },
+  "icons": {
+    "16": "icons/icon16.png",
+    "32": "icons/icon32.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  }
+}

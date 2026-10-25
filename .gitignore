@@ -1,0 +1,12 @@
+research/
+.chrome-profile/
+*.log
+tool-results/
+
+# packaging
+*.pem
+keys/
+dist/pack-profile/
+dist/
+research_*.png
+dist/

@@ -1,0 +1,529 @@
+/* Scoped to #ktw-pane so nothing leaks into Kick's own styles. */
+#ktw-pane {
+  --ktw-bg: #090b0f;
+  --ktw-fg: #ffffff;
+  --ktw-muted: rgba(255, 255, 255, 0.46);
+  --ktw-faint: rgba(255, 255, 255, 0.28);
+  --ktw-hover: rgba(255, 255, 255, 0.06);
+  --ktw-border: rgba(255, 255, 255, 0.09);
+  --ktw-twitch: #9147ff;
+  --ktw-kick: #53fc18;
+  --ktw-error: #ff5c5c;
+  --ktw-warn: #f0b429;
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  background: var(--ktw-bg);
+  color: var(--ktw-fg);
+  font-family: inherit;
+  font-size: var(--chatroom-font-size, 14px);
+  line-height: 1.45;
+  text-align: left;
+  contain: layout style paint;
+}
+
+#ktw-pane.ktw-native {
+  bottom: auto;
+  height: 30px;
+}
+
+#ktw-pane.ktw-native .ktw-list,
+#ktw-pane.ktw-native .ktw-jump {
+  display: none;
+}
+
+#ktw-pane .ktw-bar {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex: 0 0 30px;
+  padding: 0 8px;
+  border-bottom: 1px solid var(--ktw-border);
+  background: rgba(255, 255, 255, 0.02);
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--ktw-muted);
+  user-select: none;
+}
+
+#ktw-pane .ktw-bar-divider {
+  color: var(--ktw-faint);
+  font-weight: 500;
+}
+
+#ktw-pane .ktw-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  white-space: nowrap;
+}
+
+#ktw-pane .ktw-status[data-who="twitch"] {
+  color: #c9aefb;
+}
+
+#ktw-pane .ktw-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--ktw-faint);
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.4);
+  transition: background 120ms ease;
+}
+
+#ktw-pane .ktw-status[data-state="live"] .ktw-dot {
+  background: var(--ktw-kick);
+  box-shadow: 0 0 6px rgba(83, 252, 24, 0.55);
+}
+
+#ktw-pane .ktw-status[data-who="twitch"][data-state="live"] .ktw-dot {
+  background: var(--ktw-twitch);
+  box-shadow: 0 0 6px rgba(145, 71, 255, 0.7);
+}
+
+#ktw-pane .ktw-status[data-state="connecting"] .ktw-dot {
+  background: var(--ktw-warn);
+  animation: ktw-pulse 1.2s ease-in-out infinite;
+}
+
+#ktw-pane .ktw-status[data-state="error"] .ktw-dot {
+  background: var(--ktw-error);
+}
+
+@keyframes ktw-pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.35;
+  }
+}
+
+#ktw-pane .ktw-bar-twitch-icon {
+  width: 12px;
+  height: 12px;
+  padding: 1px;
+  box-sizing: content-box;
+  border-radius: 3px;
+  background: var(--ktw-twitch);
+  color: #ffffff;
+  display: inline-flex;
+}
+
+#ktw-pane .ktw-channel {
+  color: #c9aefb;
+  text-decoration: none;
+  max-width: 120px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+#ktw-pane .ktw-channel:hover {
+  color: #e2d1ff;
+  text-decoration: underline;
+}
+
+#ktw-pane .ktw-spacer {
+  flex: 1 1 auto;
+}
+
+#ktw-pane .ktw-settings-btn {
+  width: 16px;
+  height: 16px;
+  padding: 0;
+  border: none;
+  background: transparent;
+  color: rgba(255, 255, 255, 0.5);
+  cursor: pointer;
+  display: inline-flex;
+  border-radius: 4px;
+}
+
+#ktw-pane .ktw-settings-btn:hover {
+  color: #ffffff;
+  background: rgba(255, 255, 255, 0.1);
+}
+
+#ktw-pane .ktw-menu {
+  position: absolute;
+  top: 32px;
+  right: 8px;
+  z-index: 20;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 8px 10px;
+  border: 1px solid var(--ktw-border);
+  border-radius: 8px;
+  background: #131820;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.55);
+  color: #e8e8ec;
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+#ktw-pane .ktw-menu[hidden] {
+  display: none;
+}
+
+#ktw-pane .ktw-menu label {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  cursor: pointer;
+}
+
+#ktw-pane .ktw-menu input {
+  margin: 0;
+  accent-color: var(--ktw-twitch);
+}
+
+#ktw-pane .ktw-menu .ktw-repo-link {
+  margin-top: 3px;
+  padding-top: 6px;
+  border-top: 1px solid var(--ktw-border);
+  color: #c9aefb;
+  font-size: 11px;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+#ktw-pane .ktw-menu .ktw-repo-link:hover {
+  color: #e6dbff;
+  text-decoration: underline;
+}
+
+#ktw-pane .ktw-toggle {
+  appearance: none;
+  border: 1px solid var(--ktw-border);
+  background: rgba(255, 255, 255, 0.05);
+  color: rgba(255, 255, 255, 0.72);
+  font: inherit;
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  padding: 2px 7px;
+  border-radius: 5px;
+  cursor: pointer;
+  line-height: 1.4;
+}
+
+#ktw-pane .ktw-toggle:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: #fff;
+}
+
+#ktw-pane .ktw-list {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  overscroll-behavior: contain;
+  padding: 4px 0 0;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.18) transparent;
+}
+
+#ktw-pane .ktw-list::-webkit-scrollbar {
+  width: 6px;
+}
+
+#ktw-pane .ktw-list::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.16);
+  border-radius: 6px;
+}
+
+#ktw-pane .ktw-row {
+  display: flex;
+  align-items: flex-start;
+  padding: 2px 8px 2px 6px;
+  border-radius: 6px;
+  font-size: var(--chatroom-font-size, 14px);
+  line-height: 1.6;
+  overflow-wrap: anywhere;
+}
+
+/* Kick's global stylesheet makes images display:block, which drops emotes and
+   badges onto their own line. Keep everything inline inside our rows. */
+#ktw-pane img,
+#ktw-pane svg {
+  display: inline-block;
+}
+
+#ktw-pane svg {
+  width: 100%;
+  height: 100%;
+}
+
+#ktw-pane .ktw-row:hover {
+  background: var(--ktw-hover);
+}
+
+#ktw-pane.ktw-tint-twitch .ktw-row.ktw-from-twitch {
+  background: linear-gradient(90deg, rgba(145, 71, 255, 0.13), rgba(145, 71, 255, 0) 60%);
+}
+
+#ktw-pane.ktw-tint-twitch .ktw-row.ktw-from-twitch:hover {
+  background: linear-gradient(90deg, rgba(145, 71, 255, 0.19), rgba(145, 71, 255, 0.04) 60%);
+}
+
+#ktw-pane.ktw-tint-kick .ktw-row.ktw-from-kick {
+  background: linear-gradient(90deg, rgba(83, 252, 24, 0.07), rgba(83, 252, 24, 0) 60%);
+}
+
+#ktw-pane.ktw-color-bar .ktw-row.ktw-from-twitch {
+  box-shadow: inset 2px 0 0 rgba(145, 71, 255, 0.8);
+}
+
+#ktw-pane.ktw-color-bar .ktw-row.ktw-from-kick {
+  box-shadow: inset 2px 0 0 rgba(83, 252, 24, 0.55);
+}
+
+#ktw-pane.ktw-tint-kick .ktw-row.ktw-from-kick:hover {
+  background: linear-gradient(90deg, rgba(83, 252, 24, 0.12), rgba(83, 252, 24, 0.03) 60%);
+}
+
+#ktw-pane.ktw-tint-twitch .ktw-row.ktw-has-bits,
+#ktw-pane.ktw-tint-kick .ktw-row.ktw-has-bits,
+#ktw-pane .ktw-row.ktw-has-bits {
+  background: linear-gradient(90deg, rgba(240, 180, 41, 0.16), rgba(240, 180, 41, 0) 60%);
+}
+
+#ktw-pane.ktw-color-bar .ktw-row.ktw-has-bits {
+  box-shadow: inset 2px 0 0 rgba(240, 180, 41, 0.8);
+}
+
+#ktw-pane .ktw-row.ktw-first-msg .ktw-text {
+  font-style: italic;
+}
+
+#ktw-pane .ktw-row.ktw-action .ktw-text {
+  font-style: italic;
+  color: #ded1ff;
+}
+
+#ktw-pane .ktw-gutter {
+  flex: 0 0 21px;
+  width: 21px;
+  padding-top: 3px;
+  display: flex;
+  justify-content: flex-start;
+}
+
+#ktw-pane .ktw-twitch-icon,
+#ktw-pane .ktw-kick-icon {
+  width: 15px;
+  height: 15px;
+  padding: 2px;
+  box-sizing: content-box;
+  border-radius: 4px;
+  display: inline-flex;
+  color: #ffffff;
+}
+
+#ktw-pane .ktw-twitch-icon {
+  background: var(--ktw-twitch);
+  box-shadow: 0 0 7px rgba(145, 71, 255, 0.5);
+}
+
+#ktw-pane .ktw-kick-icon {
+  background: var(--ktw-kick);
+  color: #07130a;
+  box-shadow: 0 0 7px rgba(83, 252, 24, 0.35);
+}
+
+#ktw-pane.ktw-hide-kick-icon .ktw-row.ktw-from-kick .ktw-kick-icon {
+  display: none;
+}
+
+#ktw-pane .ktw-main {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+#ktw-pane .ktw-line {
+  display: block;
+}
+
+#ktw-pane .ktw-ts {
+  color: var(--ktw-muted);
+  font-size: calc(var(--chatroom-font-size, 14px) - 2.5px);
+  font-weight: 600;
+  padding-right: 4px;
+  white-space: nowrap;
+}
+
+#ktw-pane.ktw-no-ts .ktw-ts {
+  display: none;
+}
+
+#ktw-pane .ktw-badges {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  padding-right: 4px;
+  vertical-align: -2px;
+}
+
+#ktw-pane.ktw-no-badges .ktw-badges,
+#ktw-pane.ktw-hide-kick-badges .ktw-row.ktw-from-kick .ktw-badges {
+  display: none;
+}
+
+#ktw-pane .ktw-badge-img {
+  display: inline-block;
+  height: 1.25em;
+  width: auto;
+  max-width: none;
+  vertical-align: middle;
+  margin-top: -0.08em;
+}
+
+#ktw-pane .ktw-badge {
+  display: inline-flex;
+  align-items: center;
+  height: 1.15em;
+  padding: 0 3px;
+  border-radius: 3px;
+  font-size: 0.68em;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  line-height: 1;
+  vertical-align: middle;
+  background: rgba(255, 255, 255, 0.14);
+  color: #fff;
+  text-transform: uppercase;
+}
+
+#ktw-pane .ktw-badge-broadcaster,
+#ktw-pane .ktw-badge-staff {
+  background: #e91916;
+}
+
+#ktw-pane .ktw-badge-moderator,
+#ktw-pane .ktw-badge-global-mod {
+  background: #00ad03;
+}
+
+#ktw-pane .ktw-badge-vip {
+  background: #e005b9;
+}
+
+#ktw-pane .ktw-badge-subscriber {
+  background: #6b4fd8;
+}
+
+#ktw-pane .ktw-badge-founder {
+  background: #b8860b;
+}
+
+#ktw-pane .ktw-badge-bits {
+  background: #c9a227;
+  color: #1a1500;
+}
+
+#ktw-pane .ktw-user {
+  font-weight: 700;
+  text-decoration: none;
+  white-space: normal;
+}
+
+#ktw-pane .ktw-user:hover {
+  text-decoration: underline;
+}
+
+#ktw-pane .ktw-sep {
+  color: rgba(255, 255, 255, 0.8);
+  font-weight: 700;
+}
+
+#ktw-pane .ktw-text {
+  color: #f2f2f5;
+  white-space: pre-wrap;
+}
+
+#ktw-pane .ktw-emote {
+  display: inline-block;
+  height: 1.8em;
+  width: auto;
+  max-width: none;
+  vertical-align: middle;
+  margin: 0 2px;
+}
+
+#ktw-pane .ktw-zw {
+  display: inline-block;
+  position: relative;
+  width: 0;
+  height: 0;
+  vertical-align: middle;
+}
+
+#ktw-pane .ktw-zw .ktw-7tv-zero-width {
+  position: absolute;
+  left: 0;
+  bottom: -0.2em;
+  margin: 0;
+  z-index: 1;
+}
+
+#ktw-pane .ktw-reply {
+  display: block;
+  margin: 0 0 1px;
+  padding-left: 6px;
+  border-left: 2px solid rgba(255, 255, 255, 0.18);
+  color: var(--ktw-muted);
+  font-size: 0.92em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+#ktw-pane .ktw-reply-user {
+  color: #bfa1f7;
+  font-weight: 700;
+  padding-right: 4px;
+}
+
+#ktw-pane .ktw-system {
+  padding-top: 3px;
+  padding-bottom: 3px;
+}
+
+#ktw-pane .ktw-system-text {
+  color: var(--ktw-muted);
+  font-size: 0.92em;
+  font-style: italic;
+}
+
+#ktw-pane .ktw-system[data-src="twitch"] .ktw-system-text {
+  color: #c9aefb;
+}
+
+#ktw-pane .ktw-jump {
+  position: absolute;
+  right: 10px;
+  bottom: 10px;
+  appearance: none;
+  border: 1px solid rgba(145, 71, 255, 0.65);
+  background: rgba(30, 18, 52, 0.95);
+  color: #e6dbff;
+  font: inherit;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 5px 10px;
+  border-radius: 999px;
+  cursor: pointer;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.45);
+}
+
+#ktw-pane .ktw-jump:hover {
+  background: rgba(58, 34, 96, 0.98);
+}

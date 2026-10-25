@@ -1,0 +1,27 @@
+import { connect, openTab, targets } from "./cdp.js";
+const extId = process.argv[2];
+const page = (await targets()).find(t => t.type === "page" && t.url.includes("kick.com"));
+const c = await connect(page.webSocketDebuggerUrl);
+await c.send("Runtime.enable");
+const ev = async (expr) => { const r = await c.send("Runtime.evaluate", { expression: expr, awaitPromise: true, returnByValue: true }); return r.exceptionDetails ? "ERR "+r.exceptionDetails.text : r.result.value; };
+const ext = async (expr) => {
+  const tab = await openTab(`chrome-extension://${extId}/popup/popup.html`);
+  await new Promise(r => setTimeout(r, 500));
+  const ec = await connect(tab.webSocketDebuggerUrl);
+  await ec.send("Runtime.enable");
+  const r = await ec.send("Runtime.evaluate", { expression: expr, awaitPromise: true, returnByValue: true });
+  ec.close();
+  await fetch(`http://127.0.0.1:9333/json/close/${tab.id}`);
+  return r.result.value;
+};
+console.log("start", await ev(`(() => { const p = document.getElementById('ktw-pane'); return p ? p.className + ' | ' + p.querySelector('.ktw-channel').textContent : 'no pane'; })()`));
+await ext(`chrome.storage.sync.set({ showTimestamps: false })`);
+await new Promise(r => setTimeout(r, 1200));
+console.log("ts-off", await ev(`(() => { const p = document.getElementById('ktw-pane'); return p.className + ' | tsNodes=' + p.querySelectorAll('.ktw-ts').length; })()`));
+await ext(`chrome.storage.sync.set({ twitchChannel: { xqc: 'shroud' } })`);
+await new Promise(r => setTimeout(r, 2500));
+console.log("mapped-live", await ev(`(() => { const p = document.getElementById('ktw-pane'); return p ? p.querySelector('.ktw-channel').textContent + ' | ' + p.className : 'no pane'; })()`));
+await ext(`chrome.storage.sync.set({ showTimestamps: true, twitchChannel: {} })`);
+await new Promise(r => setTimeout(r, 2500));
+console.log("reset", await ev(`(() => { const p = document.getElementById('ktw-pane'); return p ? p.querySelector('.ktw-channel').textContent + ' | ' + p.className : 'no pane'; })()`));
+c.close();

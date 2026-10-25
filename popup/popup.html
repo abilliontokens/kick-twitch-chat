@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Kick + Twitch Chat</title>
+    <link rel="stylesheet" href="popup.css" />
+  </head>
+  <body>
+    <header class="head">
+      <span class="logo" aria-hidden="true">
+        <svg viewBox="0 0 24 24" width="18" height="18"><path fill="currentColor" fill-rule="evenodd" d="M11.571 4.714h1.715v5.143H11.57zm4.715 0H18v5.143h-1.714zM6 0L1.714 4.286v15.428h5.143V24l4.286-4.286h3.428L22.286 12V0zm14.571 11.143l-3.428 3.428h-3.429l-3 3v-3H6.857V1.714h13.714Z"/></svg>
+      </span>
+      <div>
+        <h1>Kick + Twitch Chat</h1>
+        <p class="sub">One merged chat stream</p>
+      </div>
+    </header>
+
+    <label class="switch">
+      <input id="enabled" type="checkbox" />
+      <span class="track"><span class="thumb"></span></span>
+      <span class="switch-label">Enabled on Kick</span>
+    </label>
+
+    <section class="card">
+      <div class="row">
+        <span class="dot" id="kick-dot"></span>
+        <span class="who">Kick</span>
+        <span class="value" id="kick-name">—</span>
+      </div>
+      <div class="row">
+        <span class="dot twitch" id="twitch-dot"></span>
+        <span class="who">Twitch</span>
+        <span class="value" id="twitch-name">—</span>
+      </div>
+      <p class="hint" id="page-hint">Open a Kick channel to see chat.</p>
+    </section>
+
+    <form id="mapping">
+      <label class="field">
+        <span>Twitch channel for this Kick channel</span>
+        <input id="twitch-input" type="text" autocomplete="off" spellcheck="false" placeholder="e.g. xqc" />
+      </label>
+      <div class="actions">
+        <button type="submit" class="primary">Save</button>
+        <button type="button" id="reset" class="ghost">Use same name</button>
+      </div>
+      <p class="hint">Defaults to the Kick channel name. Set it only when the Twitch name differs.</p>
+    </form>
+
+    <section class="card slim grid">
+      <label class="check"><input id="timestamps" type="checkbox" /> Timestamps</label>
+      <label class="check"><input id="badges" type="checkbox" /> Badges</label>
+      <label class="check"><input id="kick-badges" type="checkbox" /> Kick badges</label>
+      <label class="check"><input id="tint-twitch" type="checkbox" /> Twitch tint</label>
+      <label class="check"><input id="tint-kick" type="checkbox" /> Kick tint</label>
+      <label class="check"><input id="color-bar" type="checkbox" /> Color bar</label>
+      <label class="check"><input id="kick-icon" type="checkbox" /> Kick icon</label>
+    </section>
+
+    <footer>
+      <button type="button" id="refresh" class="ghost wide">Reconnect</button>
+      <p class="hint">Read-only: Twitch chat is fetched anonymously. Send messages in Kick's own input.</p>
+      <p class="repo-line"><a href="https://github.com/abilliontokens/kick-twitch-chat" target="_blank" rel="noreferrer">Source on GitHub</a></p>
+    </footer>
+
+    <script src="popup.js"></script>
+  </body>
+</html>

@@ -1,0 +1,289 @@
+:root {
+  color-scheme: dark;
+  --bg: #0b0e13;
+  --card: #131820;
+  --line: rgba(255, 255, 255, 0.09);
+  --fg: #f1f2f4;
+  --muted: #9aa3ad;
+  --twitch: #9147ff;
+  --kick: #53fc18;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  width: 320px;
+  padding: 14px;
+  background: var(--bg);
+  color: var(--fg);
+  font: 13px/1.45 Inter, system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+
+.head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.logo {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  background: linear-gradient(145deg, var(--twitch), #5a2bb0);
+  color: #fff;
+}
+
+h1 {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+}
+
+.sub {
+  margin: 1px 0 0;
+  color: var(--muted);
+  font-size: 11px;
+}
+
+.switch {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 8px 10px;
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  background: var(--card);
+  cursor: pointer;
+  margin-bottom: 10px;
+}
+
+.switch input {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.track {
+  position: relative;
+  width: 34px;
+  height: 19px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.16);
+  transition: background 120ms ease;
+  flex: 0 0 auto;
+}
+
+.thumb {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 15px;
+  height: 15px;
+  border-radius: 50%;
+  background: #fff;
+  transition: transform 120ms ease;
+}
+
+.switch input:checked + .track {
+  background: var(--kick);
+}
+
+.switch input:checked + .track .thumb {
+  transform: translateX(15px);
+  background: #07210a;
+}
+
+.switch input:focus-visible + .track {
+  outline: 2px solid var(--twitch);
+  outline-offset: 2px;
+}
+
+.switch-label {
+  font-weight: 600;
+}
+
+.card {
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  background: var(--card);
+  padding: 9px 10px;
+  margin-bottom: 10px;
+}
+
+.card.slim {
+  display: flex;
+  gap: 16px;
+  padding: 8px 10px;
+}
+
+.card.grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px 12px;
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  min-height: 20px;
+}
+
+.who {
+  font-weight: 600;
+  color: var(--muted);
+  width: 46px;
+}
+
+.value {
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #49505a;
+  flex: 0 0 auto;
+}
+
+.dot.live {
+  background: var(--kick);
+  box-shadow: 0 0 6px rgba(83, 252, 24, 0.6);
+}
+
+.dot.twitch.live {
+  background: var(--twitch);
+  box-shadow: 0 0 6px rgba(145, 71, 255, 0.7);
+}
+
+.dot.pending {
+  background: #f0b429;
+}
+
+.dot.error {
+  background: #ff5c5c;
+}
+
+.hint {
+  margin: 6px 0 0;
+  color: var(--muted);
+  font-size: 11px;
+}
+
+form {
+  margin-bottom: 10px;
+}
+
+.field {
+  display: block;
+  margin-bottom: 8px;
+}
+
+.field span {
+  display: block;
+  margin-bottom: 5px;
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 600;
+}
+
+input[type="text"] {
+  width: 100%;
+  padding: 7px 9px;
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  background: #0e1218;
+  color: var(--fg);
+  font: inherit;
+}
+
+input[type="text"]:focus {
+  outline: none;
+  border-color: rgba(145, 71, 255, 0.7);
+}
+
+.actions {
+  display: flex;
+  gap: 8px;
+}
+
+button {
+  font: inherit;
+  font-weight: 700;
+  border-radius: 7px;
+  cursor: pointer;
+  padding: 7px 12px;
+  border: 1px solid var(--line);
+}
+
+button.primary {
+  border-color: transparent;
+  background: var(--twitch);
+  color: #fff;
+}
+
+button.primary:hover {
+  background: #a066ff;
+}
+
+button.ghost {
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--fg);
+}
+
+button.ghost:hover {
+  background: rgba(255, 255, 255, 0.09);
+}
+
+button.wide {
+  width: 100%;
+}
+
+.check {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  color: var(--fg);
+  cursor: pointer;
+}
+
+.check input {
+  accent-color: var(--twitch);
+}
+
+footer {
+  margin-top: 2px;
+}
+
+.actions + .hint,
+.field + .hint {
+  margin-top: 7px;
+}
+
+.repo-line {
+  margin: 8px 0 0;
+  text-align: center;
+  font-size: 11px;
+}
+
+.repo-line a {
+  color: #c9aefb;
+  text-decoration: none;
+  font-weight: 600;
+}
+
+.repo-line a:hover {
+  color: #e6dbff;
+  text-decoration: underline;
+}

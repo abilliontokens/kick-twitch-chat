@@ -1,0 +1,13 @@
+import { connect, openTab } from "./cdp.js";
+const extId = process.argv[2];
+const tab = await openTab(`chrome-extension://${extId}/popup/popup.html`);
+await new Promise(r => setTimeout(r, 900));
+const c = await connect(tab.webSocketDebuggerUrl);
+await c.send("Page.enable");
+await c.send("Runtime.enable");
+const text = await c.send("Runtime.evaluate", { expression: "document.body.innerText", returnByValue: true });
+console.log(text.result.value);
+const s = await c.send("Page.captureScreenshot", { format: "png" });
+await Bun.write("research_popup.png", Buffer.from(s.data, "base64"));
+c.close();
+await fetch(`http://127.0.0.1:9333/json/close/${tab.id}`);

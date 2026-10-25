@@ -1,0 +1,33 @@
+import { connect, openTab, targets } from "./cdp.js";
+const extId = process.argv[2];
+const ext = async (expr) => {
+  const tab = await openTab(`chrome-extension://${extId}/popup/popup.html`);
+  await new Promise(r => setTimeout(r, 500));
+  const c = await connect(tab.webSocketDebuggerUrl);
+  await c.send("Runtime.enable");
+  const r = await c.send("Runtime.evaluate", { expression: expr, awaitPromise: true, returnByValue: true });
+  c.close();
+  await fetch(`http://127.0.0.1:9333/json/close/${tab.id}`);
+  return r.result.value;
+};
+const page = (await targets()).find(t => t.type === "page" && t.url.includes("kick.com"));
+const c = await connect(page.webSocketDebuggerUrl);
+await c.send("Runtime.enable");
+await c.send("Page.enable");
+const ev = async (expr) => (await c.send("Runtime.evaluate", { expression: expr, awaitPromise: true, returnByValue: true })).result.value;
+await c.send("Page.reload");
+await new Promise(r => setTimeout(r, 4000));
+const read = () => ev(`(() => {
+  const p = document.getElementById('ktw-pane');
+  if (!p) return 'no pane';
+  const k = p.querySelector('.ktw-row.ktw-from-kick .ktw-badges');
+  const t = p.querySelector('.ktw-row.ktw-from-twitch .ktw-badges');
+  return JSON.stringify({ cls: p.className, kickBadges: k ? getComputedStyle(k).display : null, twitchBadges: t ? getComputedStyle(t).display : null });
+})()`);
+await ext(`chrome.storage.sync.set({ kickBadges: false })`);
+await new Promise(r => setTimeout(r, 1000));
+console.log("kick-badges-off", await read());
+await ext(`chrome.storage.sync.set({ kickBadges: true })`);
+await new Promise(r => setTimeout(r, 1000));
+console.log("kick-badges-on", await read());
+c.close();
