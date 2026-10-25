@@ -12,3 +12,6 @@ research_*.png
 dist/
 body*.json
 hdr*.txt
+tools/raw-*.png
+tools/screenshot-*.html
+tools/.chrome-*
