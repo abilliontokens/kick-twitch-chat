@@ -301,6 +301,32 @@
       else this.updateScrollState();
     }
 
+    addBackfill(messages, settings) {
+      if (!messages.length) return;
+      const stick = this.following;
+      let added = 0;
+      for (const msg of messages) {
+        if (msg.id && !this.remember(this.key(msg))) continue;
+        const row = KTW.buildMessageRow(msg, settings);
+        row.__ktwMsg = msg;
+        let before = null;
+        for (const existing of this.list.children) {
+          const other = existing.__ktwMsg;
+          if (other && other.ts > msg.ts) {
+            before = existing;
+            break;
+          }
+        }
+        if (before) this.list.insertBefore(row, before);
+        else this.list.appendChild(row);
+        added += 1;
+      }
+      if (!added) return;
+      this.trim();
+      if (stick) this.scrollToBottom(false);
+      else this.updateScrollState();
+    }
+
     system(entry) {
       const stick = this.following;
       this.list.appendChild(KTW.buildSystemRow(entry));

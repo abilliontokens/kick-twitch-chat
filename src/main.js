@@ -34,6 +34,10 @@
   let lastPath = location.pathname;
   let statusState = { kick: "idle", twitch: "idle" };
   let twitchNotified = false;
+  let pusher = null;
+  let centrifugoLive = false;
+  let pusherLive = false;
+  let lastKickClearAt = 0;
   let observer = null;
   let mountQueued = false;
   let sevenTVIds = { kickUserId: null, twitchUserId: null };
@@ -159,9 +163,14 @@
   function teardown() {
     generation += 1;
     if (kick) kick.stop();
+    if (pusher) pusher.stop();
     if (twitch) twitch.stop();
     kick = null;
+    pusher = null;
     twitch = null;
+    centrifugoLive = false;
+    pusherLive = false;
+    lastKickClearAt = 0;
     if (pane) pane.unmount();
     for (const stray of document.querySelectorAll("#ktw-pane")) stray.remove();
     pane = null;
@@ -259,12 +268,12 @@
     kick = new KTW.KickChat({
       chatId,
       onStatus: (state, detail) => {
-        setStatus("kick", state, detail);
+        centrifugoLive = state === "live";
+        updateKickStatus(state === "error" ? detail : null);
       },
       onMessage: (msg) => {
         if (myGeneration !== generation || !pane) return;
-        // Drop anything already seeded from history.
-        if (msg.ts < active.startedAt - 10 * 60 * 1000) return;
+        setStatus("kick", "live");
         pane.add(msg, settings);
       },
       onDelete: (id) => {
@@ -273,6 +282,8 @@
       },
       onClear: () => {
         if (myGeneration !== generation || !pane) return;
+        if (Date.now() - lastKickClearAt < 3000) return;
+        lastKickClearAt = Date.now();
         pane.clearSource("kick");
         pane.system({ src: "kick", text: "Kick chat was cleared" });
       },
@@ -284,6 +295,41 @@
     });
     if (myGeneration !== generation) return;
     kick.start();
+
+    pusher = new KTW.KickPusher({
+      chatId,
+      onStatus: (state, detail) => {
+        if (myGeneration !== generation) return;
+        pusherLive = state === "live";
+        updateKickStatus(state === "error" ? detail : null);
+      },
+      onMessage: (msg) => {
+        if (myGeneration !== generation || !pane) return;
+        setStatus("kick", "live");
+        pane.add(msg, settings);
+      },
+      onDelete: (id) => {
+        if (myGeneration !== generation || !pane) return;
+        pane.removeMessage("kick", id);
+      },
+      onClear: () => {
+        if (myGeneration !== generation || !pane) return;
+        if (Date.now() - lastKickClearAt < 3000) return;
+        lastKickClearAt = Date.now();
+        pane.clearSource("kick");
+        pane.system({ src: "kick", text: "Kick chat was cleared" });
+      },
+      onSystem: () => {
+        // The Centrifugo feed owns system events; ignore the duplicate sidecar.
+      },
+    });
+    pusher.start();
+  }
+
+  function updateKickStatus(errorDetail) {
+    if (centrifugoLive || pusherLive) setStatus("kick", "live");
+    else if (errorDetail) setStatus("kick", "error", errorDetail);
+    else setStatus("kick", "connecting");
   }
 
   function describeKickSystem(eventName, data) {

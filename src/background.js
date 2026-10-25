@@ -48,6 +48,38 @@ async function pruneSevenTVCache() {
   await chrome.storage.local.remove(cached.slice(0, cached.length - 30).map(([key]) => key));
 }
 
+let pusherConfigCache = { at: 0, value: null };
+
+async function kickPusherConfig() {
+  if (pusherConfigCache.value && Date.now() - pusherConfigCache.at < 30 * 60 * 1000) {
+    return pusherConfigCache.value;
+  }
+  const res = await fetch("https://web.kick.com/api/v1/realtime/connection", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "x-app-platform": "web",
+      Accept: "application/json",
+    },
+    body: JSON.stringify({
+      client: { id: crypto.randomUUID(), type: "web" },
+      capabilities: { accepted_providers: [{ provider: "pusher" }] },
+    }),
+  });
+  if (!res.ok) throw new Error(`Kick realtime HTTP ${res.status}`);
+  const json = await res.json();
+  const connection = ((json.data && json.data.connections) || []).find(
+    (c) => c.provider === "pusher" && c.credentials && c.credentials.app_key,
+  );
+  if (!connection) throw new Error("Kick returned no Pusher provider");
+  const value = {
+    appKey: connection.credentials.app_key,
+    cluster: connection.credentials.cluster || "us2",
+  };
+  pusherConfigCache = { at: Date.now(), value };
+  return value;
+}
+
 async function kickChannelInfo(slug) {
   const res = await fetch(`https://kick.com/api/v2/channels/${encodeURIComponent(slug)}`, {
     headers: { Accept: "application/json" },
@@ -65,15 +97,17 @@ async function kickChannelInfo(slug) {
   };
 }
 
-async function kickHistory(chatId) {
-  const res = await fetch(`https://web.kick.com/api/v1/chat/${Number(chatId)}/history`, {
+async function kickHistory(chatId, cursor) {
+  const query = cursor ? `?cursor=${encodeURIComponent(cursor)}` : "";
+  const res = await fetch(`https://web.kick.com/api/v1/chat/${Number(chatId)}/history${query}`, {
     headers: { Accept: "application/json" },
     cache: "no-store",
   });
   if (!res.ok) throw new Error(`Kick history HTTP ${res.status}`);
   const json = await res.json();
-  const list = (json && json.data && json.data.messages) || (json && json.messages) || [];
-  return Array.isArray(list) ? list : [];
+  const data = (json && json.data) || json || {};
+  const list = data.messages || [];
+  return { messages: Array.isArray(list) ? list : [], cursor: data.cursor || null };
 }
 
 async function loadSevenTV({ kickUserId, twitchUserId }) {
@@ -141,15 +175,21 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
       .catch((error) => sendResponse({ ok: false, error: String(error && error.message) }));
     return true;
   }
+  if (message.type === "ktw:kick-pusher-config") {
+    kickPusherConfig()
+      .then((config) => sendResponse({ ok: true, ...config }))
+      .catch((error) => sendResponse({ ok: false, error: String(error && error.message) }));
+    return true;
+  }
   if (message.type === "ktw:kick-info") {
     kickChannelInfo(message.slug)
       .then((info) => sendResponse({ ok: true, info }))
       .catch((error) => sendResponse({ ok: false, error: String(error && error.message) }));
     return true;
   }
-  if (message.type === "ktw:kick-history") {
-    kickHistory(message.chatId)
-      .then((messages) => sendResponse({ ok: true, messages }))
+  if (message.type === "ktw:kick-history" || message.type === "ktw:kick-history-page") {
+    kickHistory(message.chatId, message.cursor)
+      .then((page) => sendResponse({ ok: true, messages: page.messages, cursor: page.cursor }))
       .catch((error) => sendResponse({ ok: false, error: String(error && error.message) }));
     return true;
   }

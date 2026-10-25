@@ -302,19 +302,83 @@
     };
   };
 
+  const IS_KICK_HOST = /(^|\.)kick\.com$/i.test(location.hostname);
+
+  KTW.fetchKickHistoryPage = async function fetchKickHistoryPage(chatId, cursor) {
+    const query = cursor ? `?cursor=${encodeURIComponent(cursor)}` : "";
+    let data;
+    if (IS_KICK_HOST) {
+      const res = await fetch(
+        `https://web.kick.com/api/v1/chat/${Number(chatId)}/history${query}`,
+        { headers: { Accept: "application/json" }, credentials: "include", cache: "no-store" },
+      );
+      if (!res.ok) throw new Error(`Kick history: HTTP ${res.status}`);
+      const json = await res.json();
+      data = json.data || json;
+    } else {
+      const res = await chrome.runtime.sendMessage({
+        type: "ktw:kick-history-page",
+        chatId: Number(chatId),
+        cursor: cursor || null,
+      });
+      if (!res || !res.ok) throw new Error((res && res.error) || "Kick history unavailable");
+      return { messages: res.messages || [], cursor: res.cursor || null };
+    }
+    return { messages: (data && data.messages) || [], cursor: (data && data.cursor) || null };
+  };
+
+  // Walk backwards through history until the fetched pages connect with the
+  // timestamp we have already covered. This recovers messages missed during a
+  // WebSocket reconnect or a poll gap, even when the newest page is fully seen.
+  KTW.collectKickGap = async function collectKickGap({
+    chatId,
+    seen,
+    throughTs = 0,
+    floorTs = 0,
+    maxPages = 6,
+  }) {
+    let cursor = null;
+    let pages = 0;
+    let newestTs = throughTs;
+    let connected = false;
+    const collected = new Map();
+    while (pages < maxPages) {
+      const page = await KTW.fetchKickHistoryPage(chatId, cursor);
+      pages += 1;
+      const messages = page.messages || [];
+      if (!messages.length) {
+        connected = true;
+        break;
+      }
+      let oldestTs = Infinity;
+      for (const raw of messages) {
+        const msg = normalizeMessage(raw);
+        if (!msg.id) continue;
+        if (msg.ts < oldestTs) oldestTs = msg.ts;
+        if (msg.ts > newestTs) newestTs = msg.ts;
+        if (msg.ts >= floorTs && !seen.has(msg.id)) collected.set(msg.id, msg);
+      }
+      if (oldestTs <= throughTs) {
+        connected = true;
+        break;
+      }
+      if (!page.cursor || page.cursor === cursor) {
+        connected = true;
+        break;
+      }
+      cursor = page.cursor;
+    }
+    return {
+      messages: [...collected.values()].sort((a, b) => a.ts - b.ts),
+      newestTs: connected ? newestTs : throughTs,
+      observedNewestTs: newestTs,
+      connected,
+    };
+  };
+
   KTW.fetchKickHistory = async function fetchKickHistory(chatId) {
-    const res = await fetch(`https://web.kick.com/api/v1/chat/${chatId}/history`, {
-      headers: { Accept: "application/json" },
-      credentials: "include",
-      cache: "no-store",
-    });
-    if (!res.ok) return [];
-    const json = await res.json();
-    const list =
-      (json && json.data && json.data.messages) || (json && json.messages) || [];
-    if (!Array.isArray(list)) return [];
-    // The endpoint returns newest first; the pane renders oldest first.
-    return list
+    const page = await KTW.fetchKickHistoryPage(chatId, null);
+    return page.messages
       .slice()
       .reverse()
       .map(normalizeMessage)

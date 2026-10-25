@@ -1,8 +1,8 @@
 // Twitch orchestrator: mounts the merged pane inside Twitch chat and feeds it
 // with Twitch IRC plus the mapped Kick channel. Kick's realtime WebSocket only
 // accepts kick.com origins, so on Twitch the Kick side is polled through the
-// service worker (history endpoint) at ~1.2 Hz. Kick history returns the latest
-// 25 messages, which is more than any normal channel produces in that window.
+// service worker every 800 ms. Cursor-based history pagination walks backwards
+// to close gaps larger than the newest 25-message page.
 (() => {
   const KTW = window.KTW;
   if (!KTW) return;
@@ -28,7 +28,8 @@
     "security", "settings", "store", "subscriptions", "team", "terms", "turbo", "videos",
     "wallet",
   ]);
-  const POLL_MS = 1200;
+  const POLL_LIVE_MS = 30000;
+  const POLL_FALLBACK_MS = 5000;
 
   let settings = { ...DEFAULTS };
   let pane = null;
@@ -42,7 +43,13 @@
   let mountQueued = false;
   let kickTimer = null;
   let kickSeen = new Set();
+  let kickThroughTs = 0;
+  let kickFloorTs = 0;
   let kickFailures = 0;
+  let pollDelay = POLL_FALLBACK_MS;
+  let pusher = null;
+  let pusherLive = false;
+  let lastHistoryOkAt = 0;
   let sevenTVIds = { kickUserId: null, twitchUserId: null };
   let sevenTVTimer = null;
 
@@ -150,12 +157,19 @@
     generation += 1;
     if (twitch) twitch.stop();
     twitch = null;
+    if (pusher) pusher.stop();
+    pusher = null;
+    pusherLive = false;
+    lastHistoryOkAt = 0;
     clearTimeout(kickTimer);
     kickTimer = null;
     clearTimeout(sevenTVTimer);
     sevenTVTimer = null;
     kickSeen = new Set();
+    kickThroughTs = 0;
+    kickFloorTs = 0;
     kickFailures = 0;
+    pollDelay = POLL_FALLBACK_MS;
     sevenTVIds = { kickUserId: null, twitchUserId: null };
     if (KTW.resetSevenTVChannels) KTW.resetSevenTVChannels();
     if (pane) pane.unmount();
@@ -182,44 +196,63 @@
     ensureMounted();
   }
 
-  async function kickBatch(chatId) {
-    const response = await chrome.runtime.sendMessage({ type: "ktw:kick-history", chatId });
-    if (!response || !response.ok) {
-      throw new Error((response && response.error) || "Kick history unavailable");
+  async function kickBatch(chatId, maxPages = 8, initial = false) {
+    const gap = await KTW.collectKickGap({
+      chatId,
+      seen: kickSeen,
+      throughTs: kickThroughTs,
+      floorTs: kickFloorTs,
+      maxPages,
+    });
+    // The first load intentionally stops after maxPages without connecting to
+    // timestamp zero. Anchor coverage at the newest fetched message so later
+    // polls do not walk history again.
+    kickThroughTs = initial ? gap.observedNewestTs || Date.now() : gap.newestTs;
+    if (!gap.messages.length) return 0;
+    for (const msg of gap.messages) {
+      if (msg.id) kickSeen.add(msg.id);
     }
-    const list = response.messages
-      .slice()
-      .reverse()
-      .map(KTW.normalizeKickMessage)
-      .filter((msg) => msg.id);
-    if (!list.length) return 0;
-    const fresh = [];
-    for (const msg of list) {
-      if (kickSeen.has(msg.id)) continue;
-      kickSeen.add(msg.id);
-      fresh.push(msg);
-    }
-    fresh.sort((a, b) => a.ts - b.ts);
-    if (pane && fresh.length) pane.addMany(fresh, settings);
-    if (kickSeen.size > 6000) kickSeen = new Set();
-    return fresh.length;
+    if (pane) pane.addBackfill(gap.messages, settings);
+    if (kickSeen.size > 8000) kickSeen = new Set();
+    return gap.messages.length;
   }
 
   function startKickPolling(chatId, myGeneration) {
     const poll = async () => {
       if (myGeneration !== generation || !active) return;
       try {
-        await kickBatch(chatId);
+        const added = await kickBatch(chatId, pusherLive ? 2 : 6);
         kickFailures = 0;
-        setStatus("kick", "live");
+        pollDelay = POLL_FALLBACK_MS;
+        if (added > 0) {
+          lastHistoryOkAt = Date.now();
+          if (!pusherLive) setStatus("kick", "live");
+        } else if (!pusherLive && !lastHistoryOkAt) {
+          setStatus("kick", "connecting");
+        }
       } catch (err) {
         kickFailures += 1;
-        if (kickFailures >= 2) setStatus("kick", "error", String(err && err.message ? err.message : err));
+        pollDelay = Math.min(30000, Math.max(POLL_FALLBACK_MS, pollDelay * 2));
+        if (!pusherLive && kickFailures >= 2) {
+          setStatus("kick", "error", String(err && err.message ? err.message : err));
+        }
       }
       if (myGeneration !== generation || !active) return;
-      kickTimer = setTimeout(poll, POLL_MS);
+      kickTimer = setTimeout(poll, pusherLive ? POLL_LIVE_MS : pollDelay);
     };
-    poll();
+    kickTimer = setTimeout(poll, POLL_FALLBACK_MS);
+  }
+
+  function describeKickSystem(eventName, data) {
+    if (!data || typeof data !== "object") return null;
+    const name = data.username || (data.user && data.user.username) || data.gifter_username;
+    if (eventName === "App\\Events\\SubscriptionEvent") return name ? `${name} subscribed` : null;
+    if (eventName === "App\\Events\\GiftedSubscriptionsEvent") {
+      const count =
+        (Array.isArray(data.gifted_usernames) && data.gifted_usernames.length) || data.quantity || 1;
+      return `${name || "Someone"} gifted ${count} subscription${count === 1 ? "" : "s"}`;
+    }
+    return null;
   }
 
   async function startFeeds(twitchSlug, kickSlug, myGeneration) {
@@ -281,12 +314,48 @@
     requestSevenTV();
 
     try {
-      await kickBatch(info.chatId);
-      setStatus("kick", "live");
-    } catch (err) {
-      setStatus("kick", "error", String(err && err.message ? err.message : err));
+      const seeded = await kickBatch(info.chatId, 2, true);
+      if (seeded > 0) lastHistoryOkAt = Date.now();
+    } catch {
+      /* history is optional; Pusher is the primary feed */
     }
     if (myGeneration !== generation) return;
+
+    pusher = new KTW.KickPusher({
+      chatId: info.chatId,
+      onStatus: (state, detail) => {
+        if (myGeneration !== generation) return;
+        pusherLive = state === "live";
+        if (state === "live") {
+          kickFailures = 0;
+          setStatus("kick", "live");
+        } else if (state === "error") {
+          if (Date.now() - lastHistoryOkAt > 15000) setStatus("kick", "error", detail);
+        } else if (!lastHistoryOkAt) {
+          setStatus("kick", "connecting");
+        }
+      },
+      onMessage: (msg) => {
+        if (myGeneration !== generation || !pane) return;
+        setStatus("kick", "live");
+        pane.add(msg, settings);
+      },
+      onDelete: (id) => {
+        if (myGeneration !== generation || !pane) return;
+        pane.removeMessage("kick", id);
+      },
+      onClear: () => {
+        if (myGeneration !== generation || !pane) return;
+        pane.clearSource("kick");
+        pane.system({ src: "kick", text: "Kick chat was cleared" });
+      },
+      onSystem: (eventName, data) => {
+        if (myGeneration !== generation || !pane) return;
+        const text = describeKickSystem(eventName, data);
+        if (text) pane.system({ src: "kick", text });
+      },
+    });
+    pusher.start();
     startKickPolling(info.chatId, myGeneration);
   }
 
@@ -306,6 +375,7 @@
     teardown();
     const myGeneration = generation;
     active = { twitchSlug, kickSlug, chatId: null, startedAt: Date.now() };
+    kickFloorTs = active.startedAt - 5 * 60 * 1000;
     startPane(twitchSlug, kickSlug);
     startFeeds(twitchSlug, kickSlug, myGeneration).catch((err) => {
       if (myGeneration !== generation || !pane) return;
