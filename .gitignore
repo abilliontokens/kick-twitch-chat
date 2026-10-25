@@ -10,3 +10,5 @@ dist/pack-profile/
 dist/
 research_*.png
 dist/
+body*.json
+hdr*.txt
