@@ -80,8 +80,7 @@
         <label><input type="checkbox" data-setting="tintTwitch"> Twitch tint</label>
         <label><input type="checkbox" data-setting="tintKick"> Kick tint</label>
         <label><input type="checkbox" data-setting="colorBar"> Color bar</label>
-        <label><input type="checkbox" data-setting="kickIcon"> Kick icon</label>
-        <a class="ktw-repo-link" href="https://github.com/abilliontokens/kick-twitch-chat" target="_blank" rel="noreferrer noopener">Source on GitHub</a>`;
+        <label><input type="checkbox" data-setting="kickIcon"> Kick icon</label>`;
       this.menu = menu;
       this.settingsButton = settings;
       settings.addEventListener("click", (event) => {

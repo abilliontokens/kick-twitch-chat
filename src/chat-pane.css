@@ -185,20 +185,6 @@
   accent-color: var(--ktw-twitch);
 }
 
-#ktw-pane .ktw-menu .ktw-repo-link {
-  margin-top: 3px;
-  padding-top: 6px;
-  border-top: 1px solid var(--ktw-border);
-  color: #c9aefb;
-  font-size: 11px;
-  font-weight: 600;
-  text-decoration: none;
-}
-
-#ktw-pane .ktw-menu .ktw-repo-link:hover {
-  color: #e6dbff;
-  text-decoration: underline;
-}
 
 #ktw-pane .ktw-toggle {
   appearance: none;
